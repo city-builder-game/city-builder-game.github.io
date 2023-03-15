@@ -11,7 +11,8 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <CardList />
+        <CardList listId="cardList1" />
+        <CardList listId="cardList2" />
         {/*<Counter /> */}
         <TerrainMap height={512} width={512} scale={2} generator={generator} />
         <Heightmap height={512} width={512} scale={2} generator={generator} />

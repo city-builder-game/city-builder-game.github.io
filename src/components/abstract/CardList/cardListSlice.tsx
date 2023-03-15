@@ -2,54 +2,86 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../../app/store";
 
 interface ICard {
-    id: string;
-    content?: string;
+    content: string;
+}
+
+interface ICardList {
+    cards: {
+        [key: string]: ICard | null;
+    };
+    indicator: string | null;
 }
 
 interface CardListState {
-    cards: ICard[];
-    draggedIndex: number | null;
-    indicatorIndex: number | null;
+    cardLists: {
+        [key: string]: ICardList;
+    };
+    draggedFrom: string | null;
+    activeList: string | null;
 }
 
 const initialState: CardListState = {
-    cards: [
-        { id: "card-1", content: "Card 1" },
-        { id: "card-2", content: "Card 2" },
-        { id: "card-3", content: "Card 3" },
-        { id: "card-4", content: "" },
-        { id: "card-5", content: "" },
-        { id: "card-6", content: "" },
-    ],
-    draggedIndex: null,
-    indicatorIndex: null,
+    cardLists: {
+        "cardList1": {
+            cards: {
+                "card-1": { content: "Card 1" },
+                "card-2": { content: "Card 2" },
+                "card-3": { content: "Card 3" },
+                "card-4": { content: "" },
+                "card-5": { content: "" },
+                "card-6": { content: "" },
+            },
+            indicator: null,
+        },
+        "cardList2": {
+            cards: {
+                "card-1": { content: "Card 1" },
+                "card-2": { content: "Card 2" },
+                "card-3": { content: "Card 3" },
+                "card-4": { content: "" },
+                "card-5": { content: "" },
+                "card-6": { content: "" },
+            },
+            indicator: null,
+        },
+
+    },
+    draggedFrom: null,
+    activeList: null,
 };
 
 export const cardListSlice = createSlice({
     name: "cardList",
     initialState,
     reducers: {
-        setCards: (state, action: PayloadAction<ICard[]>) => {
-            state.cards = action.payload;
+        swapCards: (state, action: PayloadAction<{
+            draggedIndex: string | null, listId: string
+        }>) => {
+            const { draggedIndex, listId } = action.payload
+            const { cardLists, activeList } = state
+
+            if (!activeList || !draggedIndex) return
+            const { indicator } = cardLists[activeList]
+            if (!indicator) return
+
+            const card1 = cardLists[listId].cards[draggedIndex]
+            cardLists[listId].cards[draggedIndex] = cardLists[activeList].cards[indicator]
+
+            cardLists[activeList].cards[indicator] = card1
+            cardLists[activeList].indicator = null
         },
-        setDraggedIndex: (state, action: PayloadAction<number | null>) => {
-            state.draggedIndex = action.payload;
+        setActiveList: (state, action: PayloadAction<string | null>) => {
+            state.activeList = action.payload
         },
-        setIndicatorIndex: (state, action: PayloadAction<number | null>) => {
-            state.indicatorIndex = action.payload;
+        setDraggedFromList: (state, action: PayloadAction<string | null>) => {
+            state.draggedFrom = action.payload
         },
-        swapCards: (state) => {
-            if (state.draggedIndex !== null && state.indicatorIndex !== null) {
-                const newCards = state.cards.slice();
-                [newCards[state.draggedIndex], newCards[state.indicatorIndex]] = [newCards[state.indicatorIndex], newCards[state.draggedIndex]];
-                state.cards = newCards;
-            }
-            state.draggedIndex = null;
-            state.indicatorIndex = null;
-        },
+        setListIndicator: (state, action: PayloadAction<{ listId: string, indicator: string | null }>) => {
+            state.cardLists[action.payload.listId].indicator = action.payload.indicator
+        }
     },
 });
 
-export const { setCards, setDraggedIndex, setIndicatorIndex, swapCards } = cardListSlice.actions;
-
+export const { swapCards, setActiveList, setDraggedFromList, setListIndicator } = cardListSlice.actions;
+export const selectCards = (listId: string) => (state: RootState) => state.cardList.cardLists[listId];
 export default cardListSlice.reducer;
