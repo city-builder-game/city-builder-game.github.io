@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import styled from 'styled-components';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from "../../../app/store";
+import { setCards, setDraggedIndex, setIndicatorIndex, swapCards } from './cardListSlice';
 import Card from "../Card/Card";
 
 const CardListContainer = styled.div`
@@ -9,49 +12,26 @@ const CardListContainer = styled.div`
   padding: 5px;
 `;
 
-interface ICard {
-  id: string;
-  content: string;
-}
-
-const initialCards: ICard[] = [
-  { id: "card-1", content: "Card 1" },
-  { id: "card-2", content: "Card 2" },
-  { id: "card-3", content: "Card 3" },
-  { id: "card-4", content: "" },
-  { id: "card-5", content: "" },
-  { id: "card-6", content: "" },
-];
-
 const CardList = () => {
-  const [cards, setCards] = useState<ICard[]>(initialCards);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [indicatorIndex, setIndicatorIndex] = useState<number | null>(null);
+  const dispatch = useDispatch();
+  const cards = useSelector((state: RootState) => state.cardList.cards);
+  const draggedIndex = useSelector((state: RootState) => state.cardList.draggedIndex);
+  const indicatorIndex = useSelector((state: RootState) => state.cardList.indicatorIndex);
 
   const handleDragStart = (index: number) => {
-    setDraggedIndex(index);
+    dispatch(setDraggedIndex(index));
   };
 
   const handleDragEnd = (index: number) => {
-    if (draggedIndex !== null && indicatorIndex !== null) {
-      // Swaps cards at draggedIndex and indicatorIndex
-      setCards(prevCards => {
-        const newCards = prevCards.slice();
-        [newCards[draggedIndex], newCards[indicatorIndex]] = [newCards[indicatorIndex], newCards[draggedIndex]];
-        return newCards;
-      })
-    }
-  
-    setDraggedIndex(null);
-    setIndicatorIndex(null);
+    dispatch(swapCards());
   };
 
   const handleDragOver = (index: number) => {
-    setIndicatorIndex(index);
+    dispatch(setIndicatorIndex(index));
   };
 
   const handleDragLeave = (index: number) => {
-    setIndicatorIndex(null);
+    dispatch(setIndicatorIndex(null));
   };
 
   return (
@@ -59,7 +39,7 @@ const CardList = () => {
       {cards.map((card, index) => (
         <Card
           key={card.id}
-          content={card.content}
+          content={card.content || ''}
           isDragged={draggedIndex === index}
           isOver={indicatorIndex === index}
           onDragStart={() => handleDragStart(index)}
@@ -68,9 +48,6 @@ const CardList = () => {
           onDragLeave={() => handleDragLeave(index)}
         />
       ))}
-      {indicatorIndex !== null && (
-        <div className="indicator" style={{ top: `${indicatorIndex * 60}px` }} />
-      )}
     </CardListContainer>
   );
 };
