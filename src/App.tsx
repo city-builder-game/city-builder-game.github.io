@@ -5,14 +5,44 @@ import { CardList } from './components/abstract';
 import { TerrainMap, Heightmap } from './components/concrete';
 import MapGenerator from './utils/MapGenerator';
 
+const cardLists = {
+  "cardList1": {
+    cards: {
+      "card-1": { content: "Card 1" },
+      "card-2": { content: "Card 2" },
+      "card-3": { content: "Card 3" },
+      "card-4": { content: "" },
+      "card-5": { content: "" },
+      "card-6": { content: "" },
+    },
+    indicator: null,
+  },
+  "cardList2": {
+    cards: {
+      "card-1": { content: "Card 1" },
+      "card-2": { content: "Card 2" },
+      "card-3": { content: "Card 3" },
+      "card-4": { content: "" },
+      "card-5": { content: "" },
+      "card-6": { content: "" },
+    },
+    indicator: null,
+  },
+}
+
 function App() {
   const generator = new MapGenerator(2, 512, 512)
-
   return (
     <div className="App">
       <header className="App-header">
-        <CardList listId="cardList1" />
-        <CardList listId="cardList2" />
+        <>
+          {Object.entries(cardLists).map(([cardListKey, cardList], index) => <CardList
+            key={index}
+            listId={cardListKey}
+            cardList={cardList}
+          />
+          )}
+        </>
         {/*<Counter /> */}
         <TerrainMap height={512} width={512} scale={2} generator={generator} />
         <Heightmap height={512} width={512} scale={2} generator={generator} />

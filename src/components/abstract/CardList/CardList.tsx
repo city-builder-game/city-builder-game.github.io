@@ -1,8 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from 'styled-components';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from "../../../app/store";
-import { selectCards, swapCards, setActiveList, setListIndicator } from './cardListSlice';
+import {
+  selectCards,
+  swapCards,
+  setActiveList,
+  setListIndicator,
+  setCardList,
+  deleteCardList,
+} from './cardListSlice';
 import Card from "../Card/Card";
 
 const CardListContainer = styled.div`
@@ -12,17 +18,39 @@ const CardListContainer = styled.div`
   padding: 5px;
 `;
 
-interface CardListProps {
-  listId: string;
+interface ICard {
+  content: string;
 }
 
-const CardList: React.FC<CardListProps> = ({ listId }) => {
+interface ICardList {
+  cards: {
+    [key: string]: ICard | null;
+  };
+  indicator: string | null;
+}
+
+interface CardListProps {
+  listId: string;
+  cardList: ICardList
+}
+
+const CardList: React.FC<CardListProps> = ({ listId, cardList }) => {
   const dispatch = useDispatch();
-  const { cards, indicator } = useSelector(selectCards(listId));
+  console.log(listId, cardList)
+  useEffect(() => {
+    dispatch(setCardList({ cardList, listId }))
+    return function cleanup() {
+      dispatch(deleteCardList(listId))
+    }
+  }, [cardList, listId]);
+  const cardListData = useSelector(selectCards(listId))
   const [draggedIndex, setDraggedIndex] = useState<string | null>(null);
+  if (!cardListData) return null
+  const { cards, indicator } = cardListData;
 
   const handleDragStart = (index: string) => {
     setDraggedIndex(index);
+
   };
 
   const handleDragEnd = (index: string) => {
@@ -43,18 +71,20 @@ const CardList: React.FC<CardListProps> = ({ listId }) => {
 
   return (
     <CardListContainer>
-      {Object.entries(cards).map(([key, card]) => (
-        <Card
-          key={key}
-          content={card?.content || ''}
-          isDragged={draggedIndex === key}
-          isOver={indicator === key}
-          onDragStart={() => handleDragStart(key)}
-          onDragEnd={() => handleDragEnd(key)}
-          onDragOver={() => handleDragOver(key)}
-          onDragLeave={() => handleDragLeave(key)}
-        />
-      ))}
+      <>
+        {cards != undefined ? Object.entries(cards).map(([key, card]) => (
+          <Card
+            key={key}
+            content={card?.content || ''}
+            isDragged={draggedIndex === key}
+            isOver={indicator === key}
+            onDragStart={() => handleDragStart(key)}
+            onDragEnd={() => handleDragEnd(key)}
+            onDragOver={() => handleDragOver(key)}
+            onDragLeave={() => handleDragLeave(key)}
+          />
+        )) : <></>}
+      </>
     </CardListContainer>
   );
 };

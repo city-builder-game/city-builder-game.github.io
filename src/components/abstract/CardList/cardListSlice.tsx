@@ -22,29 +22,6 @@ interface CardListState {
 
 const initialState: CardListState = {
     cardLists: {
-        "cardList1": {
-            cards: {
-                "card-1": { content: "Card 1" },
-                "card-2": { content: "Card 2" },
-                "card-3": { content: "Card 3" },
-                "card-4": { content: "" },
-                "card-5": { content: "" },
-                "card-6": { content: "" },
-            },
-            indicator: null,
-        },
-        "cardList2": {
-            cards: {
-                "card-1": { content: "Card 1" },
-                "card-2": { content: "Card 2" },
-                "card-3": { content: "Card 3" },
-                "card-4": { content: "" },
-                "card-5": { content: "" },
-                "card-6": { content: "" },
-            },
-            indicator: null,
-        },
-
     },
     draggedFrom: null,
     activeList: null,
@@ -78,10 +55,27 @@ export const cardListSlice = createSlice({
         },
         setListIndicator: (state, action: PayloadAction<{ listId: string, indicator: string | null }>) => {
             state.cardLists[action.payload.listId].indicator = action.payload.indicator
+        },
+        setCardList: (state, action: PayloadAction<{
+            cardList: ICardList,
+            listId: string
+        }>) => {
+            const { cardList, listId } = action.payload;
+            state.cardLists[listId] = cardList
+        },
+        deleteCardList: (state, action: PayloadAction<string>) => {
+            delete state.cardLists[action.payload]
         }
     },
 });
 
-export const { swapCards, setActiveList, setDraggedFromList, setListIndicator } = cardListSlice.actions;
+export const {
+    swapCards,
+    setActiveList,
+    setDraggedFromList,
+    setListIndicator,
+    setCardList,
+    deleteCardList,
+} = cardListSlice.actions;
 export const selectCards = (listId: string) => (state: RootState) => state.cardList.cardLists[listId];
 export default cardListSlice.reducer;
