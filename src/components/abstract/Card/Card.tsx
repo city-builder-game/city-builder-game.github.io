@@ -48,7 +48,7 @@ const Card = ({
       }}
       onDragLeave={onDragLeave}
     >
-      {content}
+      {content ? content : ""}
     </CardContainer>
   );
 };

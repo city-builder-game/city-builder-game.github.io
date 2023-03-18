@@ -1,5 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from 'styled-components';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  selectCards,
+  swapCards,
+  setActiveList,
+  setListIndicator,
+  setCardList,
+  deleteCardList,
+} from './cardListSlice';
 import Card from "../Card/Card";
 
 const CardListContainer = styled.div`
@@ -10,67 +19,72 @@ const CardListContainer = styled.div`
 `;
 
 interface ICard {
-  id: string;
   content: string;
 }
 
-const initialCards: ICard[] = [
-  { id: "card-1", content: "Card 1" },
-  { id: "card-2", content: "Card 2" },
-  { id: "card-3", content: "Card 3" },
-  { id: "card-4", content: "" },
-  { id: "card-5", content: "" },
-  { id: "card-6", content: "" },
-];
-
-const CardList = () => {
-  const [cards, setCards] = useState<ICard[]>(initialCards);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [indicatorIndex, setIndicatorIndex] = useState<number | null>(null);
-
-  const handleDragStart = (index: number) => {
-    setDraggedIndex(index);
+interface ICardList {
+  cards: {
+    [key: string]: ICard | null;
   };
+  indicator: string | null;
+}
 
-  const handleDragEnd = (index: number) => {
-    if (draggedIndex !== null && indicatorIndex !== null) {
-      // Swaps cards at draggedIndex and indicatorIndex
-      setCards(prevCards => {
-        const newCards = prevCards.slice();
-        [newCards[draggedIndex], newCards[indicatorIndex]] = [newCards[indicatorIndex], newCards[draggedIndex]];
-        return newCards;
-      })
+interface CardListProps {
+  listId: string;
+  cardList: ICardList
+}
+
+const CardList: React.FC<CardListProps> = ({ listId, cardList }) => {
+  const dispatch = useDispatch();
+  console.log(listId, cardList)
+  useEffect(() => {
+    dispatch(setCardList({ cardList, listId }))
+    return function cleanup() {
+      dispatch(deleteCardList(listId))
     }
-  
+  }, [cardList, listId]);
+  const cardListData = useSelector(selectCards(listId))
+  const [draggedIndex, setDraggedIndex] = useState<string | null>(null);
+  if (!cardListData) return null
+  const { cards, indicator } = cardListData;
+
+  const handleDragStart = (index: string) => {
+    setDraggedIndex(index);
+
+  };
+
+  const handleDragEnd = (index: string) => {
+    dispatch(swapCards({ draggedIndex, listId }));
+    dispatch(setListIndicator({ listId, indicator: null }))
     setDraggedIndex(null);
-    setIndicatorIndex(null);
+    dispatch(setActiveList(null))
   };
 
-  const handleDragOver = (index: number) => {
-    setIndicatorIndex(index);
+  const handleDragOver = (index: string) => {
+    dispatch(setListIndicator({ listId, indicator: index }))
+    dispatch(setActiveList(listId))
   };
 
-  const handleDragLeave = (index: number) => {
-    setIndicatorIndex(null);
+  const handleDragLeave = (index: string) => {
+    dispatch(setListIndicator({ listId, indicator: null }))
   };
 
   return (
     <CardListContainer>
-      {cards.map((card, index) => (
-        <Card
-          key={card.id}
-          content={card.content}
-          isDragged={draggedIndex === index}
-          isOver={indicatorIndex === index}
-          onDragStart={() => handleDragStart(index)}
-          onDragEnd={() => handleDragEnd(index)}
-          onDragOver={() => handleDragOver(index)}
-          onDragLeave={() => handleDragLeave(index)}
-        />
-      ))}
-      {indicatorIndex !== null && (
-        <div className="indicator" style={{ top: `${indicatorIndex * 60}px` }} />
-      )}
+      <>
+        {cards != undefined ? Object.entries(cards).map(([key, card]) => (
+          <Card
+            key={key}
+            content={card?.content || ''}
+            isDragged={draggedIndex === key}
+            isOver={indicator === key}
+            onDragStart={() => handleDragStart(key)}
+            onDragEnd={() => handleDragEnd(key)}
+            onDragOver={() => handleDragOver(key)}
+            onDragLeave={() => handleDragLeave(key)}
+          />
+        )) : <></>}
+      </>
     </CardListContainer>
   );
 };
